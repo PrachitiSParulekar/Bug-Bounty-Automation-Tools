@@ -10,7 +10,9 @@ load_dotenv()
 
 TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
-
+if len(sys.argv) < 2:
+    print("Usage: script.py <message>")
+    sys.exit(1)
 message = sys.argv[1]
 
 async def send_message():

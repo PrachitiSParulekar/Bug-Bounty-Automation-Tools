@@ -1,0 +1,7 @@
+flask>=2.0.0
+flask-socketio>=5.0.0
+flask-limiter>=3.0.0
+python-whois>=0.7.0
+requests>=2.26.0
+dnspython>=2.1.0
+limits>=3.9.0

@@ -1,98 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Bug Bounty Recon Tool</title>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-				background-color: #f2f2f2;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				min-height: 100vh;
-			}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bug Bounty Recon Tool</title>
+    <style>
+        :root {
+            --dark-base: #1A1A1D;
+            --dark-accent: #3B1C32;
+            --mid-accent: #6A1E55;
+            --highlight: #A64D79;
+            --white: #FFFFFF;
+        }
 
-			.container {
-				text-align: center;
-			}
+        /* Light Mode Variables */
+        [data-theme="light"] {
+            --background: var(--white);
+            --text: var(--dark-base);
+            --card-bg: var(--white);
+            --card-border: var(--mid-accent);
+            --button-bg: var(--highlight);
+            --button-text: var(--white);
+            --card-hover: var(--mid-accent);
+        }
 
-			h1 {
-				margin-top: 20px;
-			}
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --background: var(--dark-base);
+            --text: var(--white);
+            --card-bg: var(--dark-accent);
+            --card-border: var(--mid-accent);
+            --button-bg: var(--highlight);
+            --button-text: var(--white);
+            --card-hover: var(--mid-accent);
+        }
 
-			.card {
-				background-color: #fff;
-				border-radius: 10px;
-				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-				padding: 20px;
-				margin: 20px;
-				transition: transform 0.3s ease;
-				width: 250px;
-				display: inline-block;
-			}
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-			.card:hover {
-				transform: translateY(-5px);
-			}
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 1200px;
+        }
 
-			.card a {
-				text-decoration: none;
-				color: #007bff;
-				font-weight: bold;
-				transition: all 0.3s ease;
-			}
+        h1 {
+            color: var(--highlight);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
 
-			.card a:hover {
-				color: #0056b3;
-			}
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 1rem;
+        }
 
-			footer {
-				margin-top: auto;
-				background-color: #333;
-				color: #fff;
-				padding: 20px 0;
-				text-align: center;
-				width: 100%;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<h1>Bug Bounty Automation</h1>
-			<div class="card">
-				<h2>Ping</h2>
-				<p>Check if a server is reachable.</p>
-				<a href="/ping">Go to Tool</a>
-			</div>
-			<div class="card">
-				<h2>Whois</h2>
-				<p>Retrieve domain registration information.</p>
-				<a href="/whois">Go to Tool</a>
-			</div>
-			<div class="card">
-				<h2>IP Lookup</h2>
-				<p>Get detailed information about an IP address.</p>
-				<a href="/ip_lookup">Go to Tool</a>
-			</div>
-			<div class="card">
-				<h2>Certificate Search</h2>
-				<p>Search for SSL/TLS certificates.</p>
-				<a href="/certificate_search">Go to Tool</a>
-			</div>
-			<div class="card">
-				<h2>Open Ports</h2>
-				<p>Scan for open ports on a server.</p>
-				<a href="/open_ports">Go to Tool</a>
-			</div>
-			<div class="card">
-				<h2>Recon</h2>
-				<p>Gather information for reconnaissance.</p>
-				<a href="/recon">Go to Tool</a>
-			</div>
-		</div>
-	</body>
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--highlight);
+            background-color: var(--card-hover);
+        }
+
+        .card h2 {
+            color: var(--highlight);
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .card p {
+            color: var(--text);
+            margin: 0 0 1.5rem 0;
+            line-height: 1.6;
+        }
+
+        .card a {
+            text-decoration: none;
+            color: var(--button-text);
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--button-bg);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .card a:hover {
+            background-color: var(--mid-accent);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-toggle button {
+            background-color: var(--highlight);
+            color: var(--button-text);
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle button:hover {
+            background-color: var(--mid-accent);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="theme-toggle">
+        <button onclick="setTheme('light')">Light Mode</button>
+        <button onclick="setTheme('dark')">Dark Mode</button>
+    </div>
+
+    <div class="container">
+        <h1>Bug Bounty Automation</h1>
+        <div class="cards-grid">
+            <div class="card">
+                <div>
+                    <h2>Ping</h2>
+                    <p>Check if a server is reachable and measure response time for quick availability testing.</p>
+                </div>
+                <a href="/ping">Go to Tool</a>
+            </div>
+            <div class="card">
+                <div>
+                    <h2>Whois</h2>
+                    <p>Retrieve comprehensive domain registration information and ownership details.</p>
+                </div>
+                <a href="/whois">Go to Tool</a>
+            </div>
+            <div class="card">
+                <div>
+                    <h2>IP Lookup</h2>
+                    <p>Get detailed information about an IP address including location and network details.</p>
+                </div>
+                <a href="/ip_lookup">Go to Tool</a>
+            </div>
+            <div class="card">
+                <div>
+                    <h2>Certificate Search</h2>
+                    <p>Search and analyze SSL/TLS certificates for security assessment and validation.</p>
+                </div>
+                <a href="/certificate_search">Go to Tool</a>
+            </div>
+            <div class="card">
+                <div>
+                    <h2>Open Ports</h2>
+                    <p>Scan and identify open ports on a server to assess potential vulnerabilities.</p>
+                </div>
+                <a href="/open_ports">Go to Tool</a>
+            </div>
+            <div class="card">
+                <div>
+                    <h2>Subfinder</h2>
+                    <p>Discover and enumerate subdomains of target domains using passive reconnaissance.</p>
+                </div>
+                <a href="/subfinder">Go to Tool</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+        }
+    </script>
+</body>
 </html>

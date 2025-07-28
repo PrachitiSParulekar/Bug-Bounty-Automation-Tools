@@ -1,155 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Certificate Search Tool</title>
-		<style>
-			table {
-				width: 100%;
-				border-collapse: collapse;
-			}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificate Search Tool</title>
+    <style>
+        :root {
+            --dark-base: #1A1A1D;
+            --dark-accent: #3B1C32;
+            --mid-accent: #6A1E55;
+            --highlight: #A64D79;
+            --white: #FFFFFF;
+            --table-hover: rgba(166, 77, 121, 0.2);
+            --table-alt: rgba(106, 30, 85, 0.1);
+        }
 
-			th,
-			td {
-				padding: 8px;
-				border: 1px solid #ddd;
-				text-align: left;
-			}
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            min-height: 100vh;
+        }
 
-			th {
-				background-color: #f2f2f2;
-			}
+        h1 {
+            text-align: center;
+            color: var(--highlight);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-			tr:nth-child(even) {
-				background-color: #f2f2f2;
-			}
+        form {
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+            background-color: var(--dark-accent);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
 
-			tr:hover {
-				background-color: #ddd;
-			}
-		</style>
+        label {
+            font-weight: bold;
+            color: var(--white);
+            margin-right: 1rem;
+        }
 
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-			}
+        input[type='text'] {
+            padding: 0.8rem;
+            margin: 0.5rem;
+            border: 1px solid var(--mid-accent);
+            border-radius: 6px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            font-size: 1rem;
+            width: 60%;
+            transition: all 0.3s ease;
+        }
 
-			h1 {
-				text-align: center;
-			}
+        input[type='text']:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 2px rgba(166, 77, 121, 0.2);
+        }
 
-			form {
-				text-align: center;
-				margin-top: 20px;
-			}
+        button[type='submit'] {
+            padding: 0.8rem 2rem;
+            margin: 1rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-			label {
-				font-weight: bold;
-			}
+        button[type='submit']:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
 
-			input[type='text'] {
-				padding: 5px;
-				margin: 5px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-			}
+        #crtshOutput {
+            margin: 2rem auto;
+            padding: 1rem;
+            border-radius: 12px;
+            background-color: var(--dark-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow-x: auto;
+        }
 
-			button[type='submit'] {
-				padding: 8px 20px;
-				margin: 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				cursor: pointer;
-			}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--dark-accent);
+            color: var(--white);
+            margin-top: 1rem;
+        }
 
-			button[type='submit']:hover {
-				background-color: #0056b3;
-			}
+        th, td {
+            padding: 1rem;
+            border: 1px solid var(--mid-accent);
+            text-align: left;
+            white-space: nowrap;
+        }
 
-			#crtshOutput {
-				margin-top: 20px;
-				padding: 10px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-				overflow-y: auto;
-				max-height: auto;
-			}
+        th {
+            background-color: var(--mid-accent);
+            color: var(--white);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
 
-			#outputText {
-				text-align: center;
-				font-weight: bold;
-			}
+        tr:nth-child(even) {
+            background-color: var(--table-alt);
+        }
 
-			#resultText {
-				text-align: center;
-				margin-top: 10px;
-			}
+        tr:hover {
+            background-color: var(--table-hover);
+        }
 
-			.home-button {
-				position: absolute;
-				top: 10px;
-				left: 10px;
-				padding: 5px 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				text-decoration: none;
-			}
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-			.home-button:hover {
-				background-color: #0056b3;
-			}
-		</style>
-	</head>
-	<body>
-		<a href="/" class="home-button">Home</a>
-		<h1>Certificate Search Tool</h1>
-		<form id="crtshForm">
-			<label for="domain">Enter Domain</label>
-			<input type="text" id="domain" name="domain" required />
-			<button type="submit">Start Search</button>
-		</form>
-		<div id="crtshOutput"></div>
+        .home-button:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-		<script>
-			var socket = io();
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
 
-			document.getElementById('crtshForm').onsubmit = function (event) {
-				event.preventDefault();
-				var domain = document.getElementById('domain').value;
-				document.getElementById('crtshOutput').innerHTML = '';
-				socket.emit('start_crtsh', { domain: domain });
-			};
+            form {
+                padding: 1rem;
+                margin: 1rem;
+            }
 
-			socket.on('crtsh_update', function (data) {
-				var crtshOutput = document.getElementById('crtshOutput');
-				var jsonData = JSON.parse(data.data);
-				var tableHTML =
-					'<table border="1"><tr><th>Issuer CA ID</th><th>Issuer Name</th><th>Common Name</th><th>Name Value</th><th>ID</th><th>Entry Timestamp</th><th>Not Before</th><th>Not After</th><th>Serial Number</th><th>Result Count</th></tr>';
-				jsonData.forEach(function (entry) {
-					tableHTML += '<tr>';
-					tableHTML += '<td>' + entry.issuer_ca_id + '</td>';
-					tableHTML += '<td>' + entry.issuer_name + '</td>';
-					tableHTML += '<td>' + entry.common_name + '</td>';
-					tableHTML += '<td>' + entry.name_value + '</td>';
-					tableHTML += '<td>' + entry.id + '</td>';
-					tableHTML += '<td>' + entry.entry_timestamp + '</td>';
-					tableHTML += '<td>' + entry.not_before + '</td>';
-					tableHTML += '<td>' + entry.not_after + '</td>';
-					tableHTML += '<td>' + entry.serial_number + '</td>';
-					tableHTML += '<td>' + entry.result_count + '</td>';
-					tableHTML += '</tr>';
-				});
-				tableHTML += '</table>';
-				crtshOutput.innerHTML = tableHTML;
-			});
-		</script>
-	</body>
+            input[type='text'] {
+                width: 80%;
+            }
+
+            .home-button {
+                position: relative;
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-button">Home</a>
+    <h1>Certificate Search Tool</h1>
+    <form id="crtshForm">
+        <label for="domain">Enter Domain</label>
+        <input type="text" id="domain" name="domain" required />
+        <button type="submit">Start Search</button>
+    </form>
+    <div id="crtshOutput"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        document.getElementById('crtshForm').onsubmit = function (event) {
+            event.preventDefault();
+            var domain = document.getElementById('domain').value;
+            document.getElementById('crtshOutput').innerHTML = '';
+            socket.emit('start_crtsh', { domain: domain });
+        };
+
+        socket.on('crtsh_update', function (data) {
+            var crtshOutput = document.getElementById('crtshOutput');
+            var jsonData = JSON.parse(data.data);
+            var tableHTML = '<table><tr><th>Issuer CA ID</th><th>Issuer Name</th><th>Common Name</th><th>Name Value</th><th>ID</th><th>Entry Timestamp</th><th>Not Before</th><th>Not After</th><th>Serial Number</th><th>Result Count</th></tr>';
+            jsonData.forEach(function (entry) {
+                tableHTML += '<tr>';
+                tableHTML += '<td>' + entry.issuer_ca_id + '</td>';
+                tableHTML += '<td>' + entry.issuer_name + '</td>';
+                tableHTML += '<td>' + entry.common_name + '</td>';
+                tableHTML += '<td>' + entry.name_value + '</td>';
+                tableHTML += '<td>' + entry.id + '</td>';
+                tableHTML += '<td>' + entry.entry_timestamp + '</td>';
+                tableHTML += '<td>' + entry.not_before + '</td>';
+                tableHTML += '<td>' + entry.not_after + '</td>';
+                tableHTML += '<td>' + entry.serial_number + '</td>';
+                tableHTML += '<td>' + entry.result_count + '</td>';
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</table>';
+            crtshOutput.innerHTML = tableHTML;
+        });
+    </script>
+</body>
 </html>

@@ -6,6 +6,10 @@ current_time=$(date +'%d-%m-%Y %H:%M:%S')
 
 ./modules/alert "Recon started at $current_time, results will be sent to you shortly ⏳"
 
+if [ ! -f "orgs.txt" ]; then
+    echo "orgs.txt not found. Creating empty orgs.txt..."
+    touch orgs.txt
+fi
 for org_name in $(cat orgs.txt); do
   cd $org_name
 

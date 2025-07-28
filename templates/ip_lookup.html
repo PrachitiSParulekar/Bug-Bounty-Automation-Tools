@@ -1,138 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>IP Lookup Tool</title>
-		<style>
-			table {
-				width: 100%;
-				border-collapse: collapse;
-			}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IP Lookup Tool</title>
+    <style>
+        :root {
+            --dark-base: #1A1A1D;
+            --dark-accent: #3B1C32;
+            --mid-accent: #6A1E55;
+            --highlight: #A64D79;
+            --white: #FFFFFF;
+        }
 
-			th,
-			td {
-				padding: 8px;
-				border: 1px solid #ddd;
-				text-align: left;
-			}
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            min-height: 100vh;
+        }
 
-			th {
-				background-color: #f2f2f2;
-			}
+        h1 {
+            text-align: center;
+            color: var(--highlight);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-			tr:nth-child(even) {
-				background-color: #f2f2f2;
-			}
+        form {
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+            background-color: var(--dark-accent);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
 
-			tr:hover {
-				background-color: #ddd;
-			}
-		</style>
+        label {
+            font-weight: bold;
+            color: var(--white);
+            margin-right: 1rem;
+        }
 
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-			}
+        input[type='text'] {
+            padding: 0.8rem;
+            margin: 0.5rem;
+            border: 1px solid var(--mid-accent);
+            border-radius: 6px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            font-size: 1rem;
+            width: 60%;
+            transition: all 0.3s ease;
+        }
 
-			h1 {
-				text-align: center;
-			}
+        input[type='text']:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 2px rgba(166, 77, 121, 0.2);
+        }
 
-			form {
-				text-align: center;
-				margin-top: 20px;
-			}
+        button[type='submit'] {
+            padding: 0.8rem 2rem;
+            margin: 1rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-			label {
-				font-weight: bold;
-			}
+        button[type='submit']:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
 
-			input[type='text'] {
-				padding: 5px;
-				margin: 5px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-			}
+        #ipLookupOutput {
+            margin: 2rem auto;
+            padding: 1rem;
+            border-radius: 12px;
+            background-color: var(--dark-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 800px;
+        }
 
-			button[type='submit'] {
-				padding: 8px 20px;
-				margin: 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				cursor: pointer;
-			}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--dark-accent);
+            color: var(--white);
+        }
 
-			button[type='submit']:hover {
-				background-color: #0056b3;
-			}
+        th, td {
+            padding: 1rem;
+            border: 1px solid var(--mid-accent);
+            text-align: left;
+        }
 
-			#ipLookupOutput {
-				margin-top: 20px;
-				padding: 10px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-				overflow-y: auto;
-				max-height: auto;
-			}
+        th {
+            background-color: var(--mid-accent);
+            color: var(--white);
+            font-weight: 600;
+        }
 
-			.home-button {
-				position: absolute;
-				top: 10px;
-				left: 10px;
-				padding: 5px 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				text-decoration: none;
-			}
+        tr:nth-child(even) {
+            background-color: rgba(106, 30, 85, 0.1);
+        }
 
-			.home-button:hover {
-				background-color: #0056b3;
-			}
-		</style>
-	</head>
-	<body>
-		<a href="/" class="home-button">Home</a>
-		<h1>IP Lookup Tool</h1>
-		<form id="ipLookupForm">
-			<label for="ipAddress">Enter IP Address</label>
-			<input type="text" id="ipAddress" name="ipAddress" required />
-			<button type="submit">Start IP Lookup</button>
-		</form>
-		<div id="ipLookupOutput"></div>
+        tr:hover {
+            background-color: rgba(166, 77, 121, 0.2);
+        }
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-		<script>
-			var socket = io();
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-			document.getElementById('ipLookupForm').onsubmit = function (event) {
-				event.preventDefault();
-				var ipAddress = document.getElementById('ipAddress').value;
-				document.getElementById('ipLookupOutput').innerHTML = '';
-				socket.emit('start_iplookup', { ipAddress: ipAddress });
-			};
+        .home-button:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
 
-			socket.on('iplookup_update', function (data) {
-				var ipLookupOutput = document.getElementById('ipLookupOutput');
-				var jsonData = JSON.parse(data.data);
-				var tableHTML = '<table>';
-				for (var key in jsonData) {
-					if (jsonData.hasOwnProperty(key)) {
-						tableHTML += '<tr>';
-						tableHTML += '<th>' + key + '</th>';
-						tableHTML += '<td>' + jsonData[key] + '</td>';
-						tableHTML += '</tr>';
-					}
-				}
-				tableHTML += '</table>';
-				ipLookupOutput.innerHTML = tableHTML;
-			});
-		</script>
-	</body>
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            form {
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            input[type='text'] {
+                width: 80%;
+            }
+
+            .home-button {
+                position: relative;
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-button">Home</a>
+    <h1>IP Lookup Tool</h1>
+    <form id="ipLookupForm">
+        <label for="ipAddress">Enter IP Address</label>
+        <input type="text" id="ipAddress" name="ipAddress" required />
+        <button type="submit">Start IP Lookup</button>
+    </form>
+    <div id="ipLookupOutput"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        document.getElementById('ipLookupForm').onsubmit = function (event) {
+            event.preventDefault();
+            var ipAddress = document.getElementById('ipAddress').value;
+            document.getElementById('ipLookupOutput').innerHTML = '';
+            socket.emit('start_iplookup', { ipAddress: ipAddress });
+        };
+
+        socket.on('iplookup_update', function (data) {
+            var ipLookupOutput = document.getElementById('ipLookupOutput');
+            var jsonData = JSON.parse(data.data);
+            var tableHTML = '<table>';
+            for (var key in jsonData) {
+                if (jsonData.hasOwnProperty(key)) {
+                    tableHTML += '<tr>';
+                    tableHTML += '<th>' + key + '</th>';
+                    tableHTML += '<td>' + jsonData[key] + '</td>';
+                    tableHTML += '</tr>';
+                }
+            }
+            tableHTML += '</table>';
+            ipLookupOutput.innerHTML = tableHTML;
+        });
+    </script>
+</body>
 </html>

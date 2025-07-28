@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subfinder Tool</title>
+    <style>
+        :root {
+            --dark-base: #1A1A1D;
+            --dark-accent: #3B1C32;
+            --mid-accent: #6A1E55;
+            --highlight: #A64D79;
+            --white: #FFFFFF;
+        }
+
+        /* Light Mode Variables */
+        [data-theme="light"] {
+            --background: var(--white);
+            --text: var(--dark-base);
+            --card-bg: var(--white);
+            --card-border: var(--mid-accent);
+            --button-bg: var(--highlight);
+            --button-text: var(--white);
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --background: var(--dark-base);
+            --text: var(--white);
+            --card-bg: var(--dark-accent);
+            --card-border: var(--mid-accent);
+            --button-bg: var(--highlight);
+            --button-text: var(--white);
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--highlight);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .search-form {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--card-border);
+            background-color: var(--background);
+            color: var(--text);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
+
+        .results {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .error {
+            background-color: #ff4444;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .subdomain-item {
+            background-color: var(--background);
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .subdomain-item:hover {
+            transform: translateX(5px);
+            border-color: var(--highlight);
+        }
+
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-toggle button {
+            background-color: var(--highlight);
+            color: var(--button-text);
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle button:hover {
+            background-color: var(--mid-accent);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+
+            .home-button {
+                position: relative;
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+                text-align: center;
+            }
+
+            .theme-toggle {
+                position: relative;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+
+            .search-form {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <a href="/" class="home-button">Home</a>
+    <div class="theme-toggle">
+        <button onclick="setTheme('light')">Light Mode</button>
+        <button onclick="setTheme('dark')">Dark Mode</button>
+    </div>
+
+    <div class="container">
+        <h1>Subfinder</h1>
+        
+        <div class="search-form">
+            <form id="subfinderForm">
+                <input type="text" id="domain" name="domain" placeholder="Enter domain (e.g., example.com)" required>
+                <button type="submit">Find Subdomains</button>
+            </form>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <h2>Found subdomains:</h2>
+            <div id="subdomains-list"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        document.getElementById('subfinderForm').onsubmit = function(event) {
+            event.preventDefault();
+            const domain = document.getElementById('domain').value;
+            
+            // Clear previous results
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('subdomains-list').innerHTML = '';
+            
+            socket.emit('start_subfinder', { domain: domain });
+        };
+
+        socket.on('subfinder_update', function(data) {
+            if (data.error) {
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = data.error;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const results = document.getElementById('results');
+            const subdomainsList = document.getElementById('subdomains-list');
+            
+            if (data.subdomain) {
+                const item = document.createElement('div');
+                item.className = 'subdomain-item';
+                item.textContent = data.subdomain;
+                subdomainsList.appendChild(item);
+                results.style.display = 'block';
+            }
+        });
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+    </script>
+</body>
+</html>

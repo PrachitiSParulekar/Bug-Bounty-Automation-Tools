@@ -1,138 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Whois Tool</title>
-		<style>
-			table {
-				width: 100%;
-				border-collapse: collapse;
-			}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WHOIS Lookup Tool</title>
+    <style>
+        :root {
+            --dark-bg: #1A1A1D;
+            --dark-purple: #3B1C32;
+            --medium-purple: #6A1E55;
+            --light-purple: #A64D79;
+        }
 
-			th,
-			td {
-				padding: 8px;
-				border: 1px solid #ddd;
-				text-align: left;
-			}
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--dark-bg);
+            color: #ffffff;
+            min-height: 100vh;
+        }
 
-			th {
-				background-color: #f2f2f2;
-			}
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-			tr:nth-child(even) {
-				background-color: #f2f2f2;
-			}
+        h1 {
+            text-align: center;
+            color: var(--light-purple);
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
 
-			tr:hover {
-				background-color: #ddd;
-			}
-		</style>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-			}
+        form {
+            text-align: center;
+            margin: 40px 0;
+            background-color: var(--dark-purple);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-			h1 {
-				text-align: center;
-			}
+        .form-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-			form {
-				text-align: center;
-				margin-top: 20px;
-			}
+        label {
+            font-weight: 500;
+            color: #ffffff;
+            font-size: 1.1rem;
+        }
 
-			label {
-				font-weight: bold;
-			}
+        input[type='text'] {
+            padding: 12px 20px;
+            margin: 5px;
+            border: 2px solid var(--medium-purple);
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 1rem;
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
 
-			input[type='text'] {
-				padding: 5px;
-				margin: 5px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-			}
+        input[type='text']:focus {
+            outline: none;
+            border-color: var(--light-purple);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
 
-			button[type='submit'] {
-				padding: 8px 20px;
-				margin: 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				cursor: pointer;
-			}
+        button[type='submit'] {
+            padding: 12px 30px;
+            background-color: var(--light-purple);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
 
-			button[type='submit']:hover {
-				background-color: #0056b3;
-			}
+        button[type='submit']:hover {
+            background-color: var(--medium-purple);
+            transform: translateY(-2px);
+        }
 
-			#whoisOutput {
-				margin-top: 20px;
-				padding: 10px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-				overflow-y: auto;
-				max-height: auto;
-			}
+        #whoisOutput {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: var(--dark-purple);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            overflow-x: auto;
+        }
 
-			.home-button {
-				position: absolute;
-				top: 10px;
-				left: 10px;
-				padding: 5px 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				text-decoration: none;
-			}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
 
-			.home-button:hover {
-				background-color: #0056b3;
-			}
-		</style>
-	</head>
-	<body>
-		<a href="/" class="home-button">Home</a>
-		<h1>Whois Tool</h1>
-		<form id="whoisForm">
-			<label for="domain">Enter Domain</label>
-			<input type="text" id="domain" name="domain" required />
-			<button type="submit">Query Whois</button>
-		</form>
-		<div id="whoisOutput"></div>
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            word-wrap: break-word;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-		<script>
-			var socket = io();
+        td:first-child {
+            width: 30%;
+            font-weight: bold;
+        }
 
-			document.getElementById('whoisForm').onsubmit = function (event) {
-				event.preventDefault();
-				var domain = document.getElementById('domain').value;
-				document.getElementById('whoisOutput').innerHTML = '';
-				socket.emit('start_whois', { domain: domain });
-			};
+        td:last-child {
+            width: 70%;
+        }
 
-			socket.on('whois_update', function (data) {
-				var whoisOutput = document.getElementById('whoisOutput');
-				var jsonData = JSON.parse(data.data);
+        td {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
 
-				var table = '<table border="1">';
-				for (var key in jsonData) {
-					table += '<tr>';
-					table += '<td>' + key + '</td>';
-					table += '<td>' + jsonData[key] + '</td>';
-					table += '</tr>';
-				}
-				table += '</table>';
+        tr:nth-child(even) td {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
 
-				whoisOutput.innerHTML += table;
-				whoisOutput.scrollTop = whoisOutput.scrollHeight;
-			});
-		</script>
-	</body>
+        tr:hover td {
+            background-color: rgba(166, 77, 121, 0.2);
+        }
+
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: var(--medium-purple);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: var(--light-purple);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            input[type='text'] {
+                min-width: 200px;
+            }
+
+            .home-button {
+                position: static;
+                display: block;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="home-button">Home</a>
+        <h1>WHOIS Lookup Tool</h1>
+        <form id="whoisForm">
+            <div class="form-group">
+                <label for="domain">Domain Name:</label>
+                <input type="text" id="domain" name="domain" placeholder="Enter domain (e.g., example.com)" required />
+                <button type="submit">Lookup</button>
+            </div>
+        </form>
+        <div id="whoisOutput"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const whoisForm = document.getElementById('whoisForm');
+        const whoisOutput = document.getElementById('whoisOutput');
+
+        whoisForm.onsubmit = function(event) {
+            event.preventDefault();
+            const domain = document.getElementById('domain').value;
+            whoisOutput.innerHTML = '<div style="text-align: center; padding: 20px;">Loading WHOIS information...</div>';
+            socket.emit('start_whois', { domain });
+        };
+
+        socket.on('whois_update', function(data) {
+            const jsonData = JSON.parse(data.data);
+            let table = '<div><table>';
+
+            for (const [key, value] of Object.entries(jsonData)) {
+                table += '<tr>';
+                table += `<td><strong>${key}</strong></td>`;
+                table += `<td>${value}</td>`;
+                table += '</tr>';
+            }
+
+            table += '</table></div>';
+            whoisOutput.innerHTML = table;
+        });
+    </script>
+</body>
 </html>

@@ -1,13 +1,65 @@
-from flask import Flask, render_template
+from flask import Flask, json, jsonify, render_template
 from flask_socketio import SocketIO, emit
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import subprocess
 import whois
+import requests
+import re
+import sqlite3
+from datetime import datetime
 import os
+import logging
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['JSON_SORT_KEYS'] = False
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# Helper functions
+def is_valid_domain(domain):
+    pattern = r'^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, domain))
+
+def is_valid_ip(ip):
+    ip_pattern = r'^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+    return bool(re.match(ip_pattern, ip))
+
+def init_db():
+    conn = sqlite3.connect("recon/recon.db")
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS subdomains (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            org_name TEXT,
+            domain TEXT,
+            subdomain TEXT,
+            discovered_at TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+def save_subdomain(org_name, domain, subdomain):
+    conn = sqlite3.connect("recon/recon.db")
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO subdomains (org_name, domain, subdomain, discovered_at)
+        VALUES (?, ?, ?, ?)
+    ''', (org_name, domain, subdomain, datetime.now()))
+    conn.commit()
+    conn.close()
+
+# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -16,110 +68,144 @@ def index():
 def ping():
     return render_template('ping.html')
 
-@app.route('/whois')
-def whoisdomain():
-    return render_template('whois.html')
-
 @app.route('/ip_lookup')
-def iplookup():
+def ip_lookup():
     return render_template('ip_lookup.html')
 
+@app.route('/whois')
+def whois_lookup():
+    return render_template('whois.html')
+
 @app.route('/certificate_search')
-def crtsh():
+def certificate_search():
     return render_template('certificate_search.html')
 
 @app.route('/open_ports')
-def openports():
+def open_ports():
     return render_template('open_ports.html')
 
-@app.route('/recon')
-def recon():
-    return render_template('recon.html')
+@app.route('/subfinder')
+def subfinder():
+    return render_template('subfinder.html')
 
+@app.errorhandler(500)
+def handle_500(e):
+    app.logger.error(f'Server error: {e}')
+    return jsonify({"error": "Internal server error"}), 500
+
+# Socket events
 @socketio.on('start_ping')
 def start_ping(data):
-    domain = data['domain']
-    with subprocess.Popen(['ping', '-c', '4', domain], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            emit('ping_update', {'data': line.strip()})
-    emit('ping_update', {'data': 'Ping Finished'})
+    try:
+        domain = data.get('domain')
+        if not domain or not is_valid_domain(domain):
+            emit('ping_update', {'error': 'Invalid domain format'})
+            return
+
+        with subprocess.Popen(['ping', '-n', '4', domain], 
+                            stdout=subprocess.PIPE, 
+                            bufsize=1, 
+                            universal_newlines=True) as p:
+            for line in p.stdout:
+                emit('ping_update', {'data': line.strip()})
+    except subprocess.SubprocessError as e:
+        emit('ping_update', {'error': f'Ping command failed: {str(e)}'})
+    except Exception as e:
+        emit('ping_update', {'error': f'Unexpected error: {str(e)}'})
 
 @socketio.on('start_iplookup')
 def start_iplookup(data):
-    ipAddress = data['ipAddress']
-    ip = subprocess.run(['curl', f'http://ip-api.com/json/{ipAddress}'], stdout=subprocess.PIPE, text=True)
-    emit('iplookup_update', {'data': ip.stdout})
+    try:
+        ip_address = data.get('ipAddress')
+        if not ip_address or not is_valid_ip(ip_address):
+            emit('iplookup_update', {'error': 'Invalid IP address format'})
+            return
+
+        response = requests.get(f'http://ip-api.com/json/{ip_address}', timeout=10)
+        response.raise_for_status()
+        emit('iplookup_update', {'data': response.text})
+    except requests.RequestException as e:
+        emit('iplookup_update', {'error': f'Network error: {str(e)}'})
+    except Exception as e:
+        emit('iplookup_update', {'error': f'Unexpected error: {str(e)}'})
 
 @socketio.on('start_whois')
 def start_whois(data):
-    domain = data['domain']
-    domain_info = whois.whois(domain)
-    emit('whois_update', {'data': str(domain_info)})
+    try:
+        domain = data.get('domain')
+        if not domain or not is_valid_domain(domain):
+            emit('whois_update', {'error': 'Invalid domain'})
+            return
+
+        domain_info = whois.whois(domain)
+        emit('whois_update', {'data': json.dumps(domain_info)})
+    except Exception as e:
+        emit('whois_update', {'error': str(e)})
 
 @socketio.on('start_crtsh')
 def start_crtsh(data):
-    domain = data['domain']
-    crtsh_info = subprocess.run(['curl', f'https://crt.sh/?q=%.{domain}&output=json'], stdout=subprocess.PIPE, text=True)
-    emit('crtsh_update', {'data': crtsh_info.stdout})
+    try:
+        domain = data.get('domain')
+        if not domain or not is_valid_domain(domain):
+            emit('crtsh_update', {'error': 'Invalid domain'})
+            return
+
+        response = requests.get(f'https://crt.sh/?q=%.{domain}&output=json', timeout=10)
+        emit('crtsh_update', {'data': response.text})
+    except Exception as e:
+        emit('crtsh_update', {'error': str(e)})
 
 @socketio.on('start_openports')
 def start_openports(data):
-    domain = data['domain']
-    open_ports = subprocess.run(['nmap', '-F', domain], stdout=subprocess.PIPE, text=True)
-    emit('openports_update', {'data': open_ports.stdout})
+    try:
+        domain = data.get('domain')
+        if not domain or not is_valid_domain(domain):
+            emit('openports_update', {'error': 'Invalid domain'})
+            return
 
-@socketio.on('start_recon')
-def start_recon(data):
-    org_name = data['org_name']
-    domains = data['domains']
-    recon_folder = 'recon'
-    os.makedirs(recon_folder, exist_ok=True)
+        result = subprocess.run(['nmap', '-F', domain], 
+                              stdout=subprocess.PIPE, 
+                              text=True,
+                              timeout=300)
+        emit('openports_update', {'data': result.stdout})
+    except Exception as e:
+        emit('openports_update', {'error': str(e)})
 
-    # create orgs.txt if it doesn't exist
-    orgs_file_path = os.path.join(recon_folder, 'orgs.txt')
-    if not os.path.exists(orgs_file_path):
-        with open(orgs_file_path, 'w') as f:
-            pass
-    
-    # Check if org_name already exists in orgs.txt
-    orgs_file_path = os.path.join(recon_folder, 'orgs.txt')
-    with open(orgs_file_path, 'r') as orgs_file:
-        existing_orgs = orgs_file.read().splitlines()
-    if org_name in existing_orgs:
-        org_folder = os.path.join(recon_folder, org_name)
-        domains_file_path = os.path.join(org_folder, 'domains.txt')
-        
-        # Check if domains file exists
-        if os.path.exists(domains_file_path):
-            with open(domains_file_path, 'r') as domains_file:
-                existing_domains = domains_file.read().splitlines()
-            for domain in domains:
-                if domain not in existing_domains:
-                    with open(domains_file_path, 'a') as f:
-                        f.write(domain + '\n')
-                    emit('recon_update', {'data': f'Domain {domain} added to {org_name}'})
-                else:
-                    emit('recon_update', {'data': f'Domain {domain} already exists in {org_name}'})
-        else:
-            os.makedirs(org_folder, exist_ok=True)  # Ensure the org folder exists
-            with open(domains_file_path, 'a') as f:
-                for domain in domains:
-                    f.write(domain + '\n')
-            emit('recon_update', {'data': f'Domains added to {org_name}'})
-    else:
-        # Write org_name to orgs.txt
-        with open(orgs_file_path, 'a') as f:
-            f.write(org_name + '\n')
-        
-        # Write domains to domains.txt inside org folder
-        org_folder = os.path.join(recon_folder, org_name)
-        os.makedirs(org_folder, exist_ok=True)  # Ensure the org folder exists
-        domains_file_path = os.path.join(org_folder, 'domains.txt')
-        with open(domains_file_path, 'a') as f:
-            for domain in domains:
-                f.write(domain + '\n')
-        
-        emit('recon_update', {'data': f'Domains added to {org_name}'})
+@socketio.on('start_subfinder')
+def start_subfinder(data):
+    try:
+        domain = data.get('domain')
+        if not domain or not is_valid_domain(domain):
+            emit('subfinder_update', {'error': 'Invalid domain'})
+            return
+            
+        with subprocess.Popen(['subfinder', '-d', domain, '-silent'],
+                            stdout=subprocess.PIPE,
+                            bufsize=1,
+                            universal_newlines=True) as p:
+            for line in p.stdout:
+                subdomain = line.strip()
+                if subdomain:
+                    save_subdomain("", domain, subdomain)
+                    emit('subfinder_update', {'subdomain': subdomain})
+    except Exception as e:
+        emit('subfinder_update', {'error': str(e)})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', allow_unsafe_werkzeug=True)
+    init_db()
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(
+        app, 
+        host='0.0.0.0',
+        port=port,
+        debug=False,
+        use_reloader=False,
+        allow_unsafe_werkzeug=True,
+        log_output=True
+    )

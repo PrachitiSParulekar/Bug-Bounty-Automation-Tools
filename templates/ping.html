@@ -1,113 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Ping Tool</title>
-		<style>
-			body {
-				font-family: Arial, sans-serif;
-				margin: 0;
-				padding: 0;
-			}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ping Tool</title>
+    <style>
+        :root {
+            --dark-base: #1A1A1D;
+            --dark-accent: #3B1C32;
+            --mid-accent: #6A1E55;
+            --highlight: #A64D79;
+            --white: #FFFFFF;
+        }
 
-			h1 {
-				text-align: center;
-			}
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            min-height: 100vh;
+        }
 
-			form {
-				text-align: center;
-				margin-top: 20px;
-			}
+        h1 {
+            text-align: center;
+            color: var(--highlight);
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-			label {
-				font-weight: bold;
-			}
+        form {
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+            background-color: var(--dark-accent);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
 
-			input[type='text'] {
-				padding: 5px;
-				margin: 5px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-			}
+        label {
+            font-weight: bold;
+            color: var(--white);
+            margin-right: 1rem;
+        }
 
-			button[type='submit'] {
-				padding: 8px 20px;
-				margin: 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				cursor: pointer;
-			}
+        input[type='text'] {
+            padding: 0.8rem;
+            margin: 0.5rem;
+            border: 1px solid var(--mid-accent);
+            border-radius: 6px;
+            background-color: var(--dark-base);
+            color: var(--white);
+            font-size: 1rem;
+            width: 60%;
+            transition: all 0.3s ease;
+        }
 
-			button[type='submit']:hover {
-				background-color: #0056b3;
-			}
+        input[type='text']:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 2px rgba(166, 77, 121, 0.2);
+        }
 
-			#pingOutput {
-				margin-top: 20px;
-				padding: 10px;
-				border: 1px solid #ccc;
-				border-radius: 3px;
-				overflow-y: auto;
-				max-height: 300px;
-			}
+        button[type='submit'] {
+            padding: 0.8rem 2rem;
+            margin: 1rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-			#outputText {
-				text-align: center;
-				font-weight: bold;
-			}
+        button[type='submit']:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
 
-			#resultText {
-				text-align: center;
-				margin-top: 10px;
-			}
+        #pingOutput {
+            margin: 2rem auto;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background-color: var(--dark-accent);
+            border: 1px solid var(--mid-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            max-height: 400px;
+            max-width: 800px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
 
-			/* Styles for the home button */
-			.home-button {
-				position: absolute;
-				top: 10px;
-				left: 10px;
-				padding: 5px 10px;
-				background-color: #007bff;
-				color: #fff;
-				border: none;
-				border-radius: 3px;
-				text-decoration: none;
-			}
+        #pingOutput::-webkit-scrollbar {
+            width: 8px;
+        }
 
-			.home-button:hover {
-				background-color: #0056b3;
-			}
-		</style>
-	</head>
-	<body>
-		<a href="/" class="home-button">Home</a>
-		<h1>Ping Tool</h1>
-		<form id="pingForm">
-			<label for="domain">Enter Domain</label>
-			<input type="text" id="domain" name="domain" required />
-			<button type="submit">Start Ping</button>
-		</form>
-		<div id="pingOutput"></div>
+        #pingOutput::-webkit-scrollbar-track {
+            background: var(--dark-base);
+            border-radius: 4px;
+        }
 
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
-		<script>
-			var socket = io();
+        #pingOutput::-webkit-scrollbar-thumb {
+            background: var(--mid-accent);
+            border-radius: 4px;
+        }
 
-			document.getElementById('pingForm').onsubmit = function (event) {
-				event.preventDefault();
-				var domain = document.getElementById('domain').value;
-				document.getElementById('pingOutput').innerHTML = '';
-				socket.emit('start_ping', { domain: domain });
-			};
+        #pingOutput::-webkit-scrollbar-thumb:hover {
+            background: var(--highlight);
+        }
 
-			socket.on('ping_update', function (data) {
-				var pingOutput = document.getElementById('pingOutput');
-				pingOutput.innerHTML += data.data + '<br>';
-				pingOutput.scrollTop = pingOutput.scrollHeight;
-			});
-		</script>
-	</body>
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--highlight);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: var(--mid-accent);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            form {
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            input[type='text'] {
+                width: 80%;
+            }
+
+            .home-button {
+                position: relative;
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-top: 3rem;
+            }
+
+            #pingOutput {
+                margin: 1rem;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-button">Home</a>
+    <h1>Ping Tool</h1>
+    <form id="pingForm">
+        <label for="domain">Enter Domain</label>
+        <input type="text" id="domain" name="domain" required />
+        <button type="submit">Start Ping</button>
+    </form>
+    <div id="pingOutput"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        document.getElementById('pingForm').onsubmit = function (event) {
+            event.preventDefault();
+            var domain = document.getElementById('domain').value;
+            document.getElementById('pingOutput').innerHTML = '';
+            socket.emit('start_ping', { domain: domain });
+        };
+
+        socket.on('ping_update', function (data) {
+            var pingOutput = document.getElementById('pingOutput');
+            pingOutput.innerHTML += data.data + '<br>';
+            pingOutput.scrollTop = pingOutput.scrollHeight;
+        });
+    </script>
+</body>
 </html>
